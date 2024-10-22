@@ -140,10 +140,6 @@ contract GGMemeToken is ERC20, Ownable, Pausable, ReentrancyGuard {
             super._transfer(sender, DEAD_ADDRESS, burnPortion);
             emit TokensBurned(sender, burnPortion);
         }
-
-        if (features.autoLiquidityEnabled) {
-            handleLiquidity(sender, totalFee - marketingPortion - burnPortion);
-        }
     }
 
     // Reflection mechanism
