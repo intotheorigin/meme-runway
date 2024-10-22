@@ -6,31 +6,6 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
-interface IUniswapV2Factory {
-    function createPair(
-        address tokenA,
-        address tokenB
-    ) external returns (address pair);
-}
-
-interface IUniswapV2Router02 {
-    function factory() external pure returns (address);
-
-    function WETH() external pure returns (address);
-
-    function addLiquidityETH(
-        address token,
-        uint amountTokenDesired,
-        uint amountTokenMin,
-        uint amountETHMin,
-        address to,
-        uint deadline
-    )
-        external
-        payable
-        returns (uint amountToken, uint amountETH, uint liquidity);
-}
-
 contract GGMemeToken is ERC20, Ownable, Pausable, ReentrancyGuard {
     constructor(
         string memory name,
@@ -52,13 +27,6 @@ contract GGMemeToken is ERC20, Ownable, Pausable, ReentrancyGuard {
         features = _features;
         fees = _fees;
         limits = _limits;
-
-        // Initialize router and pair
-        UniswapV2Router = IUniswapV2Router02(_router);
-        UniswapV2Pair = IUniswapV2Factory(UniswapV2Router.factory()).createPair(
-                address(this),
-                UniswapV2Router.WETH()
-            );
 
         // Exclude contract addresses from fees
         isExcludedFromFees[owner()] = true;
@@ -104,8 +72,6 @@ contract GGMemeToken is ERC20, Ownable, Pausable, ReentrancyGuard {
     address public marketingWallet;
     address public constant DEAD_ADDRESS =
         0x000000000000000000000000000000000000dEaD;
-    address public UniswapV2Pair;
-    IUniswapV2Router02 public UniswapV2Router;
 
     // Mappings
     mapping(address => bool) public isExcludedFromFees;

@@ -56,6 +56,7 @@ describe("GGMemeToken", function () {
       fees,
       limits
     )) as GGMemeToken;
+    await token.waitForDeployment();
   });
 
   describe("Deployment", function () {
