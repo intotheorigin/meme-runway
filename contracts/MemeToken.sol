@@ -92,7 +92,8 @@ contract GGMemeToken is ERC20, Ownable, Pausable, ReentrancyGuard {
     event AddressExcludedFromFees(address indexed account, bool excluded);
     event TradingEnabled(uint256 timestamp);
     event TokensBurned(address indexed from, uint256 amount);
-    event RewardsDistributed(uint256 amount);
+
+    // event RewardsDistributed(uint256 amount);
 
     // Fee calculation and handling
     function calculateTotalFee(
@@ -143,12 +144,12 @@ contract GGMemeToken is ERC20, Ownable, Pausable, ReentrancyGuard {
     }
 
     // Reflection mechanism
-    function handleReflection(uint256 amount) private {
-        _totalReflections += amount;
-        uint256 reflectionPerToken = amount / totalSupply();
+    // function handleReflection(uint256 amount) private {
+    //     _totalReflections += amount;
+    //     uint256 reflectionPerToken = amount / totalSupply();
 
-        emit RewardsDistributed(amount);
-    }
+    //     emit RewardsDistributed(amount);
+    // }
 
     // Admin functions
     function toggleFeature(
