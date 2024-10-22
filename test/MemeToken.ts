@@ -3,6 +3,7 @@ import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 import { Contract } from "ethers";
 import { time } from "@nomicfoundation/hardhat-network-helpers";
+import { GGMemeToken } from "../typechain";
 
 const TOKEN_NAME = "TestMeme";
 const TOKEN_SYMBOL = "TMEME";
@@ -36,8 +37,8 @@ describe("GGMemeToken", function () {
   };
 
   const limits = {
-    maxTransactionAmount: TOTAL_SUPPLY.div(100), // 1% of total supply
-    maxWalletSize: TOTAL_SUPPLY.mul(2).div(100), // 2% of total supply
+    maxTransactionAmount: TOTAL_SUPPLY / 100n, // 1% of total supply
+    maxWalletSize: (TOTAL_SUPPLY * 2n) / 100n, // 2% of total supply
     cooldownTime: 1800, // 30 minutes
   };
 
