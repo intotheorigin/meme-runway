@@ -6,14 +6,14 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
-interface IMemeV1Factory {
+interface IUniswapV2Factory {
     function createPair(
         address tokenA,
         address tokenB
     ) external returns (address pair);
 }
 
-interface IMemeV1Router02 {
+interface IUniswapV2Router02 {
     function factory() external pure returns (address);
 
     function WETH() external pure returns (address);
@@ -67,8 +67,8 @@ contract GGMemeToken is ERC20, Ownable, Pausable, ReentrancyGuard {
     address public marketingWallet;
     address public constant DEAD_ADDRESS =
         0x000000000000000000000000000000000000dEaD;
-    address public MemeV1Pair;
-    IMemeV1Router02 public MemeV1Router;
+    address public UniswapV2Pair;
+    IUniswapV2Router02 public UniswapV2Router;
 
     // Mappings
     mapping(address => bool) public isExcludedFromFees;
@@ -113,11 +113,11 @@ contract GGMemeToken is ERC20, Ownable, Pausable, ReentrancyGuard {
         limits = _limits;
 
         // Initialize router and pair
-        MemeV1Router = IMemeV1Router02(_router);
-        MemeV1Pair = IMemeV1Factory(MemeV1Router.factory()).createPair(
-            address(this),
-            MemeV1Router.WETH()
-        );
+        UniswapV2Router = IUniswapV2Router02(_router);
+        UniswapV2Pair = IUniswapV2Factory(UniswapV2Router.factory()).createPair(
+                address(this),
+                UniswapV2Router.WETH()
+            );
 
         // Exclude contract addresses from fees
         isExcludedFromFees[owner()] = true;
