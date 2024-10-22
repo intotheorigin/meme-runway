@@ -154,17 +154,6 @@ contract GGMemeToken is ERC20, Ownable, Pausable, ReentrancyGuard {
         emit RewardsDistributed(amount);
     }
 
-    // Liquidity handling
-    function handleLiquidity(address sender, uint256 amount) private {
-        // Split the amount for liquidity
-        uint256 half = amount / 2;
-        uint256 otherHalf = amount - half;
-
-        // Handle automatic liquidity addition logic here
-        // Note: This is a simplified version. Real implementation would need
-        // to handle swapping tokens for ETH and adding liquidity
-    }
-
     // Admin functions
     function toggleFeature(
         string memory featureName,
