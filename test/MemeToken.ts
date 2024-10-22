@@ -149,10 +149,22 @@ describe("GGMemeToken", function () {
       const maxWallet = await token
         .getLimits()
         .then((l: any) => l.maxWalletSize);
-      token.connect(addr1).transfer(addr2.address, maxTx - 1n);
-      token.connect(addr1).transfer(addr2.address, maxTx - 1n);
+
+      // Get current balance of addr2
+      let currentBalance = await token.balanceOf(addr2.address);
+
+      // Calculate how many transfers needed to reach under max wallet
+      const transferAmount = maxTx - 1n;
+      const transfersNeeded =
+        (maxWallet - 1n - currentBalance) / transferAmount;
+
+      // Perform transfers looping until just under maxWallet
+      for (let i = 0; i < transfersNeeded; i++) {
+        await token.connect(owner).transfer(addr2.address, transferAmount);
+      }
+
       await expect(
-        token.connect(addr1).transfer(addr2.address, maxTx - 1n)
+        token.connect(owner).transfer(addr2.address, maxTx - 1n)
       ).to.be.revertedWith("Exceeds max wallet size");
     });
 
@@ -273,6 +285,7 @@ describe("GGMemeToken", function () {
       const whaleAmount = (limits.maxTransactionAmount * 51n) / 100n;
 
       // Normal transfer
+      await token.connect(owner).transfer(addr1.address, normalAmount);
       const balanceBefore = await token.balanceOf(addr2.address);
       await token.connect(addr1).transfer(addr2.address, normalAmount);
       const balanceAfterNormal = await token.balanceOf(addr2.address);
@@ -280,6 +293,7 @@ describe("GGMemeToken", function () {
       await time.increase(limits.cooldownTime + 1);
 
       // Whale transfer
+      await token.connect(owner).transfer(addr1.address, whaleAmount);
       await token.connect(addr1).transfer(addr2.address, whaleAmount);
       const balanceAfterWhale = await token.balanceOf(addr2.address);
 
