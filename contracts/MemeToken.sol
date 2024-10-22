@@ -41,7 +41,7 @@ contract GGMemeToken is ERC20, Ownable, Pausable, ReentrancyGuard {
         Features memory _features,
         Fees memory _fees,
         Limits memory _limits
-    ) ERC20(name, symbol) Ownable(owner()) {
+    ) ERC20(name, symbol) Ownable(_msgSender()) {
         require(
             _marketingWallet != address(0),
             "Marketing wallet cannot be zero"
