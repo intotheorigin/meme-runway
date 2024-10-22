@@ -31,7 +31,7 @@ interface IMemeV1Router02 {
         returns (uint amountToken, uint amountETH, uint liquidity);
 }
 
-contract ConfigurableMemeToken is ERC20, Ownable, Pausable, ReentrancyGuard {
+contract GGMemeToken is ERC20, Ownable, Pausable, ReentrancyGuard {
     struct Features {
         bool reflectionEnabled;
         bool antiWhaleEnabled;
@@ -126,59 +126,6 @@ contract ConfigurableMemeToken is ERC20, Ownable, Pausable, ReentrancyGuard {
 
         // Mint initial supply
         _mint(owner(), totalSupply * 10 ** decimals());
-    }
-
-    // Core token interactions
-    function _transfer(
-        address sender,
-        address recipient,
-        uint256 amount
-    ) internal virtual override whenNotPaused nonReentrant {
-        require(sender != address(0), "Transfer from zero");
-        require(recipient != address(0), "Transfer to zero");
-        require(
-            !isBlacklisted[sender] && !isBlacklisted[recipient],
-            "Blacklisted"
-        );
-        require(
-            tradingEnabled ||
-                isExcludedFromFees[sender] ||
-                isExcludedFromFees[recipient],
-            "Trading not enabled"
-        );
-
-        if (features.antiWhaleEnabled) {
-            require(amount <= limits.maxTransactionAmount, "Exceeds max tx");
-            require(
-                balanceOf(recipient) + amount <= limits.maxWalletSize,
-                "Exceeds wallet max"
-            );
-        }
-
-        if (features.cooldownEnabled && !isExcludedFromFees[sender]) {
-            require(
-                block.timestamp >= _lastTradeTime[sender] + limits.cooldownTime,
-                "Cooldown active"
-            );
-            _lastTradeTime[sender] = block.timestamp;
-        }
-
-        // Calculate fees
-        uint256 totalFee = calculateTotalFee(sender, recipient, amount);
-        uint256 netAmount = amount - totalFee;
-
-        // Handle reflection if enabled
-        if (features.reflectionEnabled && totalFee > 0) {
-            handleReflection(totalFee);
-        }
-
-        // Execute transfer
-        super._transfer(sender, recipient, netAmount);
-
-        // Handle additional features
-        if (totalFee > 0) {
-            handleFees(sender, totalFee);
-        }
     }
 
     // Fee calculation and handling
@@ -355,12 +302,69 @@ contract ConfigurableMemeToken is ERC20, Ownable, Pausable, ReentrancyGuard {
         return limits;
     }
 
-    // Override transfers to handle rewards
+    function _executeTransfer(
+        address sender,
+        address recipient,
+        uint256 amount
+    ) private {
+        // Core token interaction checks
+        require(sender != address(0), "Transfer from zero address");
+        require(recipient != address(0), "Transfer to zero address");
+        require(
+            !isBlacklisted[sender] && !isBlacklisted[recipient],
+            "Sender or recipient is blacklisted"
+        );
+        require(
+            tradingEnabled ||
+                isExcludedFromFees[sender] ||
+                isExcludedFromFees[recipient],
+            "Trading not enabled"
+        );
+
+        // Anti-whale feature
+        if (features.antiWhaleEnabled) {
+            require(
+                amount <= limits.maxTransactionAmount,
+                "Exceeds max transaction amount"
+            );
+            require(
+                balanceOf(recipient) + amount <= limits.maxWalletSize,
+                "Exceeds max wallet size"
+            );
+        }
+
+        // Cooldown feature
+        if (features.cooldownEnabled && !isExcludedFromFees[sender]) {
+            require(
+                block.timestamp >= _lastTradeTime[sender] + limits.cooldownTime,
+                "Cooldown period active"
+            );
+            _lastTradeTime[sender] = block.timestamp;
+        }
+
+        // Fee calculation
+        uint256 totalFee = calculateTotalFee(sender, recipient, amount);
+        uint256 netAmount = amount - totalFee;
+
+        // Reflection handling
+        if (features.reflectionEnabled && totalFee > 0) {
+            handleReflection(totalFee);
+        }
+
+        // Execute transfer
+        super._transfer(sender, recipient, netAmount);
+
+        // Additional features handling
+        if (totalFee > 0) {
+            handleFees(sender, totalFee);
+        }
+    }
+
     function transfer(
         address recipient,
         uint256 amount
     ) public virtual override returns (bool) {
-        _transfer(_msgSender(), recipient, amount);
+        _executeTransfer(_msgSender(), recipient, amount);
         return true;
     }
 
@@ -369,15 +373,18 @@ contract ConfigurableMemeToken is ERC20, Ownable, Pausable, ReentrancyGuard {
         address recipient,
         uint256 amount
     ) public virtual override returns (bool) {
-        _transfer(sender, recipient, amount);
+        _executeTransfer(sender, recipient, amount);
+
+        // Update allowance
         uint256 currentAllowance = allowance(sender, _msgSender());
         require(
             currentAllowance >= amount,
-            "ERC20: transfer amount exceeds allowance"
+            "Transfer amount exceeds allowance"
         );
         unchecked {
             _approve(sender, _msgSender(), currentAllowance - amount);
         }
+
         return true;
     }
 }
