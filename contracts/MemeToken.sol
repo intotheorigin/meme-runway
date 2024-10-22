@@ -32,6 +32,43 @@ interface IUniswapV2Router02 {
 }
 
 contract GGMemeToken is ERC20, Ownable, Pausable, ReentrancyGuard {
+    constructor(
+        string memory name,
+        string memory symbol,
+        uint256 totalSupply,
+        address _marketingWallet,
+        address _router,
+        Features memory _features,
+        Fees memory _fees,
+        Limits memory _limits
+    ) ERC20(name, symbol) Ownable(owner()) {
+        require(
+            _marketingWallet != address(0),
+            "Marketing wallet cannot be zero"
+        );
+        require(_router != address(0), "Router cannot be zero");
+
+        marketingWallet = _marketingWallet;
+        features = _features;
+        fees = _fees;
+        limits = _limits;
+
+        // Initialize router and pair
+        UniswapV2Router = IUniswapV2Router02(_router);
+        UniswapV2Pair = IUniswapV2Factory(UniswapV2Router.factory()).createPair(
+                address(this),
+                UniswapV2Router.WETH()
+            );
+
+        // Exclude contract addresses from fees
+        isExcludedFromFees[owner()] = true;
+        isExcludedFromFees[address(this)] = true;
+        isExcludedFromFees[marketingWallet] = true;
+
+        // Mint initial supply
+        _mint(owner(), totalSupply * 10 ** decimals());
+    }
+
     struct Features {
         bool reflectionEnabled;
         bool antiWhaleEnabled;
@@ -90,43 +127,6 @@ contract GGMemeToken is ERC20, Ownable, Pausable, ReentrancyGuard {
     event TradingEnabled(uint256 timestamp);
     event TokensBurned(address indexed from, uint256 amount);
     event RewardsDistributed(uint256 amount);
-
-    constructor(
-        string memory name,
-        string memory symbol,
-        uint256 totalSupply,
-        address _marketingWallet,
-        address _router,
-        Features memory _features,
-        Fees memory _fees,
-        Limits memory _limits
-    ) ERC20(name, symbol) {
-        require(
-            _marketingWallet != address(0),
-            "Marketing wallet cannot be zero"
-        );
-        require(_router != address(0), "Router cannot be zero");
-
-        marketingWallet = _marketingWallet;
-        features = _features;
-        fees = _fees;
-        limits = _limits;
-
-        // Initialize router and pair
-        UniswapV2Router = IUniswapV2Router02(_router);
-        UniswapV2Pair = IUniswapV2Factory(UniswapV2Router.factory()).createPair(
-                address(this),
-                UniswapV2Router.WETH()
-            );
-
-        // Exclude contract addresses from fees
-        isExcludedFromFees[owner()] = true;
-        isExcludedFromFees[address(this)] = true;
-        isExcludedFromFees[marketingWallet] = true;
-
-        // Mint initial supply
-        _mint(owner(), totalSupply * 10 ** decimals());
-    }
 
     // Fee calculation and handling
     function calculateTotalFee(
