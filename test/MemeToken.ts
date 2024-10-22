@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import { ethers, upgrades } from "hardhat";
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 import { Contract } from "ethers";
 import { time } from "@nomicfoundation/hardhat-network-helpers";
@@ -11,8 +11,7 @@ const TOTAL_SUPPLY = ethers.parseUnits("1000000000", 18); // 1 billion tokens
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 
 describe("GGMemeToken", function () {
-  let Token: Contract;
-  let token: Contract;
+  let token: GGMemeToken;
   let owner: SignerWithAddress;
   let addr1: SignerWithAddress;
   let addr2: SignerWithAddress;
@@ -46,8 +45,8 @@ describe("GGMemeToken", function () {
     [owner, addr1, addr2, marketing, router] = await ethers.getSigners();
     provider = ethers.provider;
 
-    Token = await ethers.getContractFactory("GGMemeToken");
-    token = await Token.deploy(
+    const Token = await ethers.getContractFactory("GGMemeToken");
+    token = (await Token.deploy(
       TOKEN_NAME,
       TOKEN_SYMBOL,
       TOTAL_SUPPLY,
@@ -56,8 +55,7 @@ describe("GGMemeToken", function () {
       features,
       fees,
       limits
-    );
-    await token.deployed();
+    )) as GGMemeToken;
   });
 
   describe("Deployment", function () {
@@ -267,7 +265,7 @@ describe("GGMemeToken", function () {
 
     it("Should apply whale tax for large transactions", async function () {
       const normalAmount = ethers.parseUnits("10000", 18);
-      const whaleAmount = limits.maxTransactionAmount.mul(51).div(100);
+      const whaleAmount = (limits.maxTransactionAmount * 51n) / 100n;
 
       // Normal transfer
       const balanceBefore = await token.balanceOf(addr2.address);
@@ -281,14 +279,13 @@ describe("GGMemeToken", function () {
       const balanceAfterWhale = await token.balanceOf(addr2.address);
 
       // Calculate effective tax rates
-      const normalTaxRate = normalAmount
-        .sub(balanceAfterNormal.sub(balanceBefore))
-        .mul(100)
-        .div(normalAmount);
-      const whaleTaxRate = whaleAmount
-        .sub(balanceAfterWhale.sub(balanceAfterNormal))
-        .mul(100)
-        .div(whaleAmount);
+      const normalTaxRate =
+        ((normalAmount - (balanceAfterNormal - balanceBefore)) * 100n) /
+        normalAmount;
+
+      const whaleTaxRate =
+        ((whaleAmount - (balanceAfterWhale - balanceAfterNormal)) * 100n) /
+        whaleAmount;
 
       expect(whaleTaxRate).to.be.gt(normalTaxRate);
     });
@@ -304,7 +301,9 @@ describe("GGMemeToken", function () {
         .transfer(addr2.address, ethers.parseUnits("1000", 18));
       const receipt = await tx.wait();
 
-      expect(receipt.gasUsed.toNumber()).to.be.lt(300000); // Adjust threshold as needed
+      const gasUsed = BigInt(receipt!.gasUsed); // Defaults to 0 if receipt is null
+
+      expect(Number(gasUsed)).to.be.lessThan(300000);
     });
   });
 });
