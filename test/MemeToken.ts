@@ -16,7 +16,6 @@ describe("GGMemeToken", function () {
   let addr1: SignerWithAddress;
   let addr2: SignerWithAddress;
   let marketing: SignerWithAddress;
-  let router: SignerWithAddress;
   let provider: typeof ethers.provider;
 
   const features = {
@@ -42,7 +41,7 @@ describe("GGMemeToken", function () {
   };
 
   beforeEach(async function () {
-    [owner, addr1, addr2, marketing, router] = await ethers.getSigners();
+    [owner, addr1, addr2, marketing] = await ethers.getSigners();
     provider = ethers.provider;
 
     const Token = await ethers.getContractFactory("GGMemeToken");
@@ -51,7 +50,6 @@ describe("GGMemeToken", function () {
       TOKEN_SYMBOL,
       TOTAL_SUPPLY,
       marketing.address,
-      router.address,
       features,
       fees,
       limits

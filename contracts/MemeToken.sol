@@ -12,7 +12,6 @@ contract GGMemeToken is ERC20, Ownable, Pausable, ReentrancyGuard {
         string memory symbol,
         uint256 totalSupply,
         address _marketingWallet,
-        address _router,
         Features memory _features,
         Fees memory _fees,
         Limits memory _limits
@@ -21,7 +20,6 @@ contract GGMemeToken is ERC20, Ownable, Pausable, ReentrancyGuard {
             _marketingWallet != address(0),
             "Marketing wallet cannot be zero"
         );
-        require(_router != address(0), "Router cannot be zero");
 
         marketingWallet = _marketingWallet;
         features = _features;
@@ -142,14 +140,6 @@ contract GGMemeToken is ERC20, Ownable, Pausable, ReentrancyGuard {
             emit TokensBurned(sender, burnPortion);
         }
     }
-
-    // Reflection mechanism
-    // function handleReflection(uint256 amount) private {
-    //     _totalReflections += amount;
-    //     uint256 reflectionPerToken = amount / totalSupply();
-
-    //     emit RewardsDistributed(amount);
-    // }
 
     // Admin functions
     function toggleFeature(
@@ -299,9 +289,7 @@ contract GGMemeToken is ERC20, Ownable, Pausable, ReentrancyGuard {
         uint256 netAmount = amount - totalFee;
 
         // Reflection handling
-        if (features.reflectionEnabled && totalFee > 0) {
-            handleReflection(totalFee);
-        }
+        if (features.reflectionEnabled && totalFee > 0) {}
 
         // Execute transfer
         super._transfer(sender, recipient, netAmount);
