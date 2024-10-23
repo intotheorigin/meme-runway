@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
-contract GGMemeToken is ERC20, Ownable, Pausable, ReentrancyGuard {
+contract MemeToken is ERC20, Ownable, Pausable, ReentrancyGuard {
     constructor(
         string memory name,
         string memory symbol,
@@ -36,7 +36,6 @@ contract GGMemeToken is ERC20, Ownable, Pausable, ReentrancyGuard {
     }
 
     struct Features {
-        bool reflectionEnabled;
         bool antiWhaleEnabled;
         bool autoLiquidityEnabled;
         bool cooldownEnabled;
@@ -45,7 +44,6 @@ contract GGMemeToken is ERC20, Ownable, Pausable, ReentrancyGuard {
     }
 
     struct Fees {
-        uint256 reflectionFee;
         uint256 liquidityFee;
         uint256 marketingFee;
         uint256 burnFee;
@@ -78,7 +76,6 @@ contract GGMemeToken is ERC20, Ownable, Pausable, ReentrancyGuard {
     mapping(address => uint256) private _reflectedBalances;
 
     // Tracking variables
-    uint256 private _totalReflections;
     uint256 public launchedAt;
     bool public tradingEnabled;
 
@@ -103,10 +100,7 @@ contract GGMemeToken is ERC20, Ownable, Pausable, ReentrancyGuard {
             return 0;
         }
 
-        uint256 totalFee = fees.reflectionFee +
-            fees.liquidityFee +
-            fees.marketingFee +
-            fees.burnFee;
+        uint256 totalFee = fees.liquidityFee + fees.marketingFee + fees.burnFee;
 
         // Add whale tax if applicable
         if (
@@ -121,15 +115,9 @@ contract GGMemeToken is ERC20, Ownable, Pausable, ReentrancyGuard {
 
     function handleFees(address sender, uint256 totalFee) private {
         uint256 marketingPortion = (totalFee * fees.marketingFee) /
-            (fees.reflectionFee +
-                fees.liquidityFee +
-                fees.marketingFee +
-                fees.burnFee);
+            (fees.liquidityFee + fees.marketingFee + fees.burnFee);
         uint256 burnPortion = (totalFee * fees.burnFee) /
-            (fees.reflectionFee +
-                fees.liquidityFee +
-                fees.marketingFee +
-                fees.burnFee);
+            (fees.liquidityFee + fees.marketingFee + fees.burnFee);
 
         if (marketingPortion > 0) {
             super._transfer(sender, marketingWallet, marketingPortion);
@@ -146,11 +134,7 @@ contract GGMemeToken is ERC20, Ownable, Pausable, ReentrancyGuard {
         string memory featureName,
         bool enabled
     ) external onlyOwner {
-        if (keccak256(bytes(featureName)) == keccak256(bytes("reflection"))) {
-            features.reflectionEnabled = enabled;
-        } else if (
-            keccak256(bytes(featureName)) == keccak256(bytes("antiWhale"))
-        ) {
+        if (keccak256(bytes(featureName)) == keccak256(bytes("antiWhale"))) {
             features.antiWhaleEnabled = enabled;
         } else if (
             keccak256(bytes(featureName)) == keccak256(bytes("autoLiquidity"))
@@ -173,20 +157,16 @@ contract GGMemeToken is ERC20, Ownable, Pausable, ReentrancyGuard {
     }
 
     function updateFees(
-        uint256 _reflectionFee,
         uint256 _liquidityFee,
         uint256 _marketingFee,
         uint256 _burnFee
     ) external onlyOwner {
         require(
-            _reflectionFee + _liquidityFee + _marketingFee + _burnFee <= 25,
+            _liquidityFee + _marketingFee + _burnFee <= 25,
             "Total fee too high"
         );
-        fees = Fees(_reflectionFee, _liquidityFee, _marketingFee, _burnFee);
-        emit FeeUpdated(
-            "fees",
-            _reflectionFee + _liquidityFee + _marketingFee + _burnFee
-        );
+        fees = Fees(_liquidityFee, _marketingFee, _burnFee);
+        emit FeeUpdated("fees", _liquidityFee + _marketingFee + _burnFee);
     }
 
     function updateLimits(
@@ -287,9 +267,6 @@ contract GGMemeToken is ERC20, Ownable, Pausable, ReentrancyGuard {
         // Fee calculation
         uint256 totalFee = calculateTotalFee(sender, recipient, amount);
         uint256 netAmount = amount - totalFee;
-
-        // Reflection handling
-        if (features.reflectionEnabled && totalFee > 0) {}
 
         // Execute transfer
         super._transfer(sender, recipient, netAmount);

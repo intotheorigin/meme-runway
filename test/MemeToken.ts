@@ -3,7 +3,7 @@ import { ethers, upgrades } from "hardhat";
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 import { Contract } from "ethers";
 import { time } from "@nomicfoundation/hardhat-network-helpers";
-import { GGMemeToken } from "../typechain";
+import { MemeToken } from "../typechain";
 
 const TOKEN_NAME = "TestMeme";
 const TOKEN_SYMBOL = "TMEME";
@@ -11,7 +11,7 @@ const TOTAL_SUPPLY = ethers.parseUnits("1000000000", 18); // 1 billion tokens
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 
 describe("GGMemeToken", function () {
-  let token: GGMemeToken;
+  let token: MemeToken;
   let owner: SignerWithAddress;
   let addr1: SignerWithAddress;
   let addr2: SignerWithAddress;
@@ -19,7 +19,6 @@ describe("GGMemeToken", function () {
   let provider: typeof ethers.provider;
 
   const features = {
-    reflectionEnabled: true,
     antiWhaleEnabled: true,
     autoLiquidityEnabled: true,
     cooldownEnabled: true,
@@ -28,7 +27,6 @@ describe("GGMemeToken", function () {
   };
 
   const fees = {
-    reflectionFee: 2,
     liquidityFee: 2,
     marketingFee: 2,
     burnFee: 1,
@@ -44,7 +42,7 @@ describe("GGMemeToken", function () {
     [owner, addr1, addr2, marketing] = await ethers.getSigners();
     provider = ethers.provider;
 
-    const Token = await ethers.getContractFactory("GGMemeToken");
+    const Token = await ethers.getContractFactory("MemeToken");
     token = (await Token.deploy(
       TOKEN_NAME,
       TOKEN_SYMBOL,
@@ -53,7 +51,7 @@ describe("GGMemeToken", function () {
       features,
       fees,
       limits
-    )) as GGMemeToken;
+    )) as MemeToken;
     await token.waitForDeployment();
   });
 
@@ -72,8 +70,8 @@ describe("GGMemeToken", function () {
       const deployedFees = await token.getFees();
       const deployedLimits = await token.getLimits();
 
-      expect(deployedFeatures.reflectionEnabled).to.equal(
-        features.reflectionEnabled
+      expect(deployedFeatures.antiWhaleEnabled).to.equal(
+        features.antiWhaleEnabled
       );
       expect(deployedFees.marketingFee).to.equal(fees.marketingFee);
       expect(deployedLimits.maxTransactionAmount).to.equal(
@@ -91,9 +89,9 @@ describe("GGMemeToken", function () {
 
   describe("Feature Toggling", function () {
     it("Should toggle features correctly", async function () {
-      await token.toggleFeature("reflection", false);
+      await token.toggleFeature("antiWhale", false);
       const features = await token.getFeatures();
-      expect(features.reflectionEnabled).to.be.false;
+      expect(features.antiWhaleEnabled).to.be.false;
     });
 
     it("Should only allow owner to toggle features", async function () {
@@ -110,16 +108,15 @@ describe("GGMemeToken", function () {
 
   describe("Fee Management", function () {
     it("Should update fees correctly", async function () {
-      await token.updateFees(1, 1, 1, 1);
+      await token.updateFees(1, 1, 1);
       const newFees = await token.getFees();
-      expect(newFees.reflectionFee).to.equal(1);
       expect(newFees.liquidityFee).to.equal(1);
       expect(newFees.marketingFee).to.equal(1);
       expect(newFees.burnFee).to.equal(1);
     });
 
     it("Should reject fees totaling more than 25%", async function () {
-      await expect(token.updateFees(10, 10, 10, 10)).to.be.revertedWith(
+      await expect(token.updateFees(10, 10, 10)).to.be.revertedWith(
         "Total fee too high"
       );
     });
