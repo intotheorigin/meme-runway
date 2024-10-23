@@ -37,7 +37,6 @@ contract MemeToken is ERC20, Ownable, Pausable, ReentrancyGuard {
 
     struct Features {
         bool antiWhaleEnabled;
-        bool autoLiquidityEnabled;
         bool cooldownEnabled;
         bool blacklistEnabled;
         bool autoBurnEnabled;
@@ -136,10 +135,6 @@ contract MemeToken is ERC20, Ownable, Pausable, ReentrancyGuard {
     ) external onlyOwner {
         if (keccak256(bytes(featureName)) == keccak256(bytes("antiWhale"))) {
             features.antiWhaleEnabled = enabled;
-        } else if (
-            keccak256(bytes(featureName)) == keccak256(bytes("autoLiquidity"))
-        ) {
-            features.autoLiquidityEnabled = enabled;
         } else if (
             keccak256(bytes(featureName)) == keccak256(bytes("cooldown"))
         ) {

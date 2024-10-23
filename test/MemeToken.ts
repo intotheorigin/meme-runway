@@ -20,7 +20,6 @@ describe("GGMemeToken", function () {
 
   const features = {
     antiWhaleEnabled: true,
-    autoLiquidityEnabled: true,
     cooldownEnabled: true,
     blacklistEnabled: true,
     autoBurnEnabled: true,
