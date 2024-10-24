@@ -88,7 +88,7 @@ describe("GGMemeToken", function () {
 
   describe("Feature Toggling", function () {
     it("Should toggle features correctly", async function () {
-      await token.toggleFeature("antiWhale", false);
+      await token.toggleFeature("antiWhaleEnabled", false);
       const features = await token.getFeatures();
       expect(features.antiWhaleEnabled).to.be.false;
     });

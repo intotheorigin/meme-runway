@@ -133,18 +133,22 @@ contract MemeToken is ERC20, Ownable, Pausable, ReentrancyGuard {
         string memory featureName,
         bool enabled
     ) external onlyOwner {
-        if (keccak256(bytes(featureName)) == keccak256(bytes("antiWhale"))) {
+        if (
+            keccak256(bytes(featureName)) ==
+            keccak256(bytes("antiWhaleEnabled"))
+        ) {
             features.antiWhaleEnabled = enabled;
         } else if (
-            keccak256(bytes(featureName)) == keccak256(bytes("cooldown"))
+            keccak256(bytes(featureName)) == keccak256(bytes("cooldownEnabled"))
         ) {
             features.cooldownEnabled = enabled;
         } else if (
-            keccak256(bytes(featureName)) == keccak256(bytes("blacklist"))
+            keccak256(bytes(featureName)) ==
+            keccak256(bytes("blacklistEnabled"))
         ) {
             features.blacklistEnabled = enabled;
         } else if (
-            keccak256(bytes(featureName)) == keccak256(bytes("autoBurn"))
+            keccak256(bytes(featureName)) == keccak256(bytes("autoBurnEnabled"))
         ) {
             features.autoBurnEnabled = enabled;
         }
