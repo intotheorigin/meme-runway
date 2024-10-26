@@ -173,16 +173,16 @@ describe("GGMemeToken", function () {
 
   describe("Blacklist Functionality", function () {
     it("Should blacklist and unblacklist addresses", async function () {
-      await token.setBlacklist(addr1.address, true);
+      await token.addToBlacklist(addr1.address, true);
       expect(await token.isBlacklisted(addr1.address)).to.be.true;
 
-      await token.setBlacklist(addr1.address, false);
+      await token.addToBlacklist(addr1.address, false);
       expect(await token.isBlacklisted(addr1.address)).to.be.false;
     });
 
     it("Should prevent blacklisted addresses from trading", async function () {
       await token.transfer(addr1.address, ethers.parseUnits("1000", 18));
-      await token.setBlacklist(addr1.address, true);
+      await token.addToBlacklist(addr1.address, true);
 
       await expect(
         token

@@ -71,6 +71,7 @@ contract MemeToken is ERC20, Ownable, Pausable, ReentrancyGuard {
     // Mappings
     mapping(address => bool) public isExcludedFromFees;
     mapping(address => bool) public isBlacklisted;
+    address[] public blacklistedAddresses;
     mapping(address => uint256) private _lastTradeTime;
     mapping(address => uint256) private _reflectedBalances;
 
@@ -177,12 +178,13 @@ contract MemeToken is ERC20, Ownable, Pausable, ReentrancyGuard {
         emit LimitUpdated("limits", _maxTx);
     }
 
-    function setBlacklist(
+    function addToBlacklist(
         address account,
         bool blacklisted
     ) external onlyOwner {
         require(features.blacklistEnabled, "Blacklist not enabled");
         isBlacklisted[account] = blacklisted;
+        blacklistedAddresses.push(account);
         emit AddressBlacklisted(account, blacklisted);
     }
 
@@ -211,6 +213,10 @@ contract MemeToken is ERC20, Ownable, Pausable, ReentrancyGuard {
     }
 
     // View functions
+    function getAllBlacklisted() external view returns (address[] memory) {
+        return blacklistedAddresses;
+    }
+
     function getFeatures() external view returns (Features memory) {
         return features;
     }
