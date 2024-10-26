@@ -182,10 +182,14 @@ contract MemeToken is ERC20, Ownable, Pausable, ReentrancyGuard {
         address account,
         bool blacklisted
     ) external onlyOwner {
-        require(features.blacklistEnabled, "Blacklist not enabled");
-        isBlacklisted[account] = blacklisted;
-        blacklistedAddresses.push(account);
-        emit AddressBlacklisted(account, blacklisted);
+        // Check if the account is already blacklisted before adding
+        if (isBlacklisted[account] != blacklisted) {
+            isBlacklisted[account] = blacklisted;
+            if (blacklisted) {
+                blacklistedAddresses.push(account);
+            }
+            emit AddressBlacklisted(account, blacklisted);
+        }
     }
 
     function excludeFromFees(
