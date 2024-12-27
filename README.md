@@ -1,6 +1,8 @@
 # 🚀 Advanced Meme Coin Implementation
 A comprehensive implementation of modern meme token features with enhanced security measures and community-driven tokenomics.
 
+Repo is now public!
+
 ## 📋 Features Overview
 
 ### Core Token Implementation
